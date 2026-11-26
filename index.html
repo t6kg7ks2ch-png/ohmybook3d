@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#171410" />
+<title>오마이북 · 3D 북카페 | Stay On Page</title>
+<meta name="description" content="청도 독립서점 오마이북의 3D 북카페. 공간을 둘러보고, 책을 읽고, 커피를 직접 내려 보세요." />
+<link rel="preconnect" href="https://unpkg.com" />
+<link rel="stylesheet" href="./style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- 로딩 -->
+<div id="loader">
+  <div class="loader-mark">STAY ON PAGE</div>
+  <div class="loader-bar"><i id="loaderBar"></i></div>
+  <p id="loaderText">공간을 준비하고 있어요…</p>
+</div>
+
+<!-- 상단 -->
+<header id="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <span class="brand-name">오마이북</span>
+    <span class="brand-sub">ON MY BOOK · STAY ON PAGE</span>
+  </div>
+  <nav id="zones">
+    <button data-zone="entrance" class="on">입구</button>
+    <button data-zone="counter">카운터 바</button>
+    <button data-zone="postcard">엽서 벽</button>
+    <button data-zone="ondal">다락 좌식방</button>
+    <button data-zone="library">복층 서재</button>
+    <button data-zone="cafe2">2층 카페</button>
+  </nav>
+  <div class="tools">
+    <button id="btn-books" title="비치 도서">책 <b id="bookCount">8</b></button>
+    <button id="btn-reviews" title="독후감 보드">독후감</button>
+    <button id="btn-letter" title="엽서 쓰기">엽서 쓰기</button>
+  </div>
+</header>
+
+<!-- 하단 안내 -->
+<div id="hint">
+  <span class="hint-pc">드래그로 둘러보기 · 스크롤로 확대 · 책장의 책을 눌러 읽기</span>
+  <span class="hint-mb">한 손가락으로 둘러보기 · 두 손가락 확대 · 책을 눌러 읽기</span>
+</div>
+
+<!-- 하단 존 독 (모바일) -->
+<div id="dock"></div>
+
+<!-- 커피 안내 힌트 -->
+<div id="coffeeHint" class="hidden">
+  <div class="ch-inner">
+    <span class="ch-eq"><i></i><i></i><i></i></span>
+    <span>카운터의 에스프레소 머신을 눌러 커피를 내려 보세요</span>
+  </div>
+</div>
+
+<!-- 책 상세 -->
+<aside id="bookPanel">
+  <button class="close" data-close="bookPanel">×</button>
+  <div class="bp-cover"><img id="bpCover" alt="" /></div>
+  <div class="bp-body">
+    <p class="bp-kicker" id="bpKicker">비치 도서</p>
+    <h2 id="bpTitle">-</h2>
+    <p class="bp-author" id="bpAuthor">-</p>
+    <p class="bp-note" id="bpNote">-</p>
+    <blockquote id="bpQuote" class="bp-quote hidden"></blockquote>
+    <div class="bp-meta">
+      <span id="bpShelf">-</span>
+    </div>
+    <div class="bp-actions">
+      <button id="bpReview" class="primary">독후감 남기기</button>
+      <button id="bpBoard" class="ghost">이 책의 독후감 <b id="bpReviewCount">0</b></button>
+    </div>
+    <div class="bp-reviews" id="bpReviews"></div>
+  </div>
+</aside>
+
+<!-- 독후감 모달 -->
+<div class="modal" id="reviewModal">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div>
+        <p class="kicker">독후감 보드</p>
+        <h2 id="rmTitle">이 책의 독후감</h2>
+      </div>
+      <button class="close" data-close="reviewModal">×</button>
+    </div>
+    <div class="sheet-body" id="rmList"></div>
+  </div>
+</div>
+
+<!-- 독후감 쓰기 -->
+<div class="modal" id="writeModal">
+  <div class="sheet narrow">
+    <div class="sheet-head">
+      <div>
+        <p class="kicker">독후감</p>
+        <h2 id="wmTitle">책 제목</h2>
+      </div>
+      <button class="close" data-close="writeModal">×</button>
+    </div>
+    <div class="sheet-body">
+      <label class="field">
+        <span>별점</span>
+        <div class="stars" id="wStars">
+          <button data-v="1">★</button><button data-v="2">★</button><button data-v="3">★</button><button data-v="4">★</button><button data-v="5">★</button>
+        </div>
+      </label>
+      <label class="field">
+        <span>한 줄 평</span>
+        <input id="wOne" maxlength="60" placeholder="예: 여름이 끝난 뒤에 다시 펼치고 싶은 책" />
+      </label>
+      <label class="field">
+        <span>독후감</span>
+        <textarea id="wText" rows="5" maxlength="600" placeholder="오늘 이 책을 읽고 남은 마음"></textarea>
+      </label>
+      <label class="field row">
+        <span>이름 (선택)</span>
+        <input id="wName" maxlength="20" placeholder="미소" />
+      </label>
+      <button id="wSubmit" class="primary wide">독후감 남기기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 엽서 쓰기 -->
+<div class="modal" id="letterModal">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div>
+        <p class="kicker">With tea, Stay book</p>
+        <h2>엽서를 남겨 주세요</h2>
+      </div>
+      <button class="close" data-close="letterModal">×</button>
+    </div>
+    <div class="sheet-body letter-grid">
+      <div class="letter-form">
+        <label class="field"><span>받는 사람에게</span><input id="lTo" maxlength="24" placeholder="오늘 이 자리에 앉은 누군가에게" /></label>
+        <label class="field"><span>짧은 글</span><textarea id="lBody" rows="4" maxlength="120" placeholder="여기서 읽은 문장 하나, 남겨 둘 마음 한 줄"></textarea></label>
+        <label class="field row"><span>이름 (선택)</span><input id="lFrom" maxlength="16" placeholder="미소" /></label>
+        <div class="letter-swatches" id="lSwatches"></div>
+        <button id="lSubmit" class="primary wide">벽에 붙이기</button>
+        <p class="tiny">여기에 쓴 엽서는 이 브라우저에 저장되고, 3D 엽서 벽에 실제로 붙습니다.</p>
+      </div>
+      <div class="letter-preview"><div class="postcard" id="lPreview"><span id="lpTo">To.</span><p id="lpBody">오늘의 문장을 적어 보세요.</p><em id="lpFrom"></em></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 도서 목록 -->
+<div class="modal" id="booksModal">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div><p class="kicker">서가</p><h2>오마이북 비치 도서</h2></div>
+      <button class="close" data-close="booksModal">×</button>
+    </div>
+    <div class="sheet-body" id="booksList"></div>
+  </div>
+</div>
+
+<!-- 커피 HUD -->
+<section id="coffeeHud" class="hidden">
+  <div class="coffee-top">
+    <div class="cf-title">
+      <p class="kicker">Cafe Oh My</p>
+      <h2 id="cfName">아메리카노</h2>
+      <p id="cfStepLabel">01 · 그라인딩</p>
+    </div>
+    <button id="cfExit" class="close">×</button>
+  </div>
+  <ol class="cf-steps" id="cfSteps"></ol>
+  <p class="cf-guide" id="cfGuide">포터필터를 그라인더에 대고 길게 눌러 주세요.</p>
+  <div class="cf-gauges" id="cfGauges"></div>
+  <div class="cf-actions">
+    <button id="cfAction" class="hold">길게 눌러 갈기</button>
+    <button id="cfAlt" class="ghost hidden">얼음 추가</button>
+    <button id="cfReset" class="ghost hidden">다시 내리기</button>
+  </div>
+  <div class="cf-result hidden" id="cfResult">
+    <div class="cf-cup"></div>
+    <div><b id="cfResultTitle">잘 나왔어요</b><p id="cfResultText"></p></div>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
